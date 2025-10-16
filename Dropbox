@@ -1,0 +1,72 @@
+pip install dropbox
+
+app.py
+
+from flask import Flask, request, render_template_string, send_file
+import dropbox
+import os
+from io import BytesIO
+
+ACCESS_TOKEN = " "
+dbx = dropbox.Dropbox(ACCESS_TOKEN)
+
+app = Flask(__name__)
+
+HTML_PAGE = '''
+<!doctype html>
+<title>Dropbox Upload & Download</title>
+<h2>Upload a File to Dropbox</h2>
+<form method="post" enctype="multipart/form-data" action="/upload">
+  <input type="file" name="file"><br><br>
+  <input type="submit" value="Upload">
+</form>
+<p>{{ upload_message }}</p>
+
+<hr>
+
+<h2>Download a File from Dropbox</h2>
+<form method="post" action="/download">
+  <input type="text" name="filename" placeholder="Enter Dropbox filename (e.g. photo.jpg)"><br><br>
+  <input type="submit" value="Download">
+</form>
+<p>{{ download_message }}</p>
+'''
+
+@app.route("/", methods=["GET"])
+def index():
+    return render_template_string(HTML_PAGE, upload_message="", download_message="")
+
+@app.route("/upload", methods=["POST"])
+def upload():
+    message = ""
+    if 'file' not in request.files:
+        message = " No file part"
+    else:
+        file = request.files['file']
+        if file.filename == "":
+            message = "No selected file"
+        else:
+            try:
+                dbx.files_upload(file.read(), f"/{file.filename}", mode=dropbox.files.WriteMode.overwrite)
+                message = f" File '{file.filename}' uploaded to Dropbox."
+            except Exception as e:
+                message = f"Upload failed: {e}"
+    return render_template_string(HTML_PAGE, upload_message=message, download_message="")
+
+@app.route("/download", methods=["POST"])
+def download():
+    filename = request.form.get("filename")
+    if not filename:
+        return render_template_string(HTML_PAGE, upload_message="", download_message=" Please enter a filename")
+
+    dropbox_path = f"/{filename}"
+    try:
+        metadata, res = dbx.files_download(dropbox_path)
+        file_data = BytesIO(res.content)
+        file_data.seek(0)
+        return send_file(file_data, download_name=filename, as_attachment=True)
+    except Exception as e:
+        return render_template_string(HTML_PAGE, upload_message="", download_message=f" Download failed: {e}")
+
+if __name__ == "__main__":
+    app.run(debug=True)
