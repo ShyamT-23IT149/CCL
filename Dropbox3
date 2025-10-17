@@ -1,0 +1,44 @@
+const { Dropbox } = require('dropbox');
+const fs = require('fs');
+
+const dbx = new Dropbox({ accessToken: ' ' });
+
+async function uploadFile() {
+  await dbx.filesUpload({ path: '/test.txt', contents: fs.readFileSync('test.txt'), mode: 'overwrite' });
+  console.log('Uploaded test.txt');
+}
+
+async function listFiles() {
+  const res = await dbx.filesListFolder({ path: '' });
+  console.log('Files:');
+  res.result.entries.forEach(f => console.log(' -', f.name));
+}
+
+async function downloadFile() {
+  const res = await dbx.filesDownload({ path: '/test.txt' });
+  fs.writeFileSync('downloaded_test.txt', res.result.fileBinary, 'binary');
+  console.log('Downloaded to downloaded_test.txt');
+}
+
+async function deleteFile() {
+  await dbx.filesDeleteV2({ path: '/test.txt' });
+  console.log('Deleted test.txt');
+}
+
+(async () => {
+  await uploadFile();
+  await listFiles();
+  await downloadFile();
+  await deleteFile();
+})();
+
+
+
+
+
+
+
+
+
+
+//npm install dropbox,node dropbox.js
