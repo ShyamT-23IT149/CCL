@@ -1,0 +1,64 @@
+⚙️ Step 1: Set Up Ubuntu VM
+
+Open VirtualBox → New → Name: HadoopVM
+
+Type: Linux, Version: Ubuntu (64-bit)
+
+Allocate:
+
+RAM: 4 GB (recommended)
+
+Disk: 25 GB (VDI, dynamically allocated)
+
+Start the VM and install Ubuntu using the ISO.
+
+After installation, open a terminal in Ubuntu.
+
+⚙️ Step 2: Install Java
+sudo apt update
+sudo apt install openjdk-11-jdk -y
+java -version
+
+⚙️ Step 3: Download Hadoop
+cd ~
+wget https://downloads.apache.org/hadoop/common/hadoop-3.3.6/hadoop-3.3.6.tar.gz
+tar -xzf hadoop-3.3.6.tar.gz
+mv hadoop-3.3.6 hadoop
+
+⚙️ Step 4: Set Environment Variables
+
+Edit .bashrc:
+
+nano ~/.bashrc
+
+Add these lines at the end:
+
+export HADOOP_HOME=$HOME/hadoop
+export PATH=$PATH:$HADOOP_HOME/bin:$HADOOP_HOME/sbin
+export JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
+
+Apply changes:
+
+source ~/.bashrc
+
+⚙️ Step 5: Verify Installation
+hadoop version
+
+If it shows Hadoop 3.3.6 → you’re good! 🎉
+
+🧠 Step 6: Run the WordCount Example (Local Mode)
+1️⃣ Create input file
+mkdir input
+echo "hello hadoop hello world" > input/file.txt
+
+2️⃣ Run WordCount
+hadoop jar $HADOOP_HOME/share/hadoop/mapreduce/hadoop-mapreduce-examples-3.3.6.jar wordcount input output
+
+3️⃣ View output
+cat output/part-r-00000
+
+Expected:
+
+hadoop  1
+hello   2
+world   1
